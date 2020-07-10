@@ -10,7 +10,9 @@ composer.start((ctx) => {
 Inspired by openprocessing.org/sketch/624879
 Переписано на JavaScript by @Loskir
 <a href="https://github.com/Loskir/ArcDrawerBot">Исходный код бота</a>
-Подписывайтесь на мой канал: @Loskirs`,
+Подписывайся на мой канал: @Loskirs
+
+Чтобы начать, отправь мне картинку (картинкой, не файлом)`,
     parse_mode: 'HTML',
     disable_web_page_preview: true,
   })
