@@ -4,7 +4,7 @@ const Results = require('../models/results')
 
 const composer = new Composer()
 composer.start((ctx) => {
-  return ctx.replyWithVideo({source: './demo.mp4'}, {
+  return ctx.telegram.sendAnimation(ctx.from.id, 'CgACAgIAAxkDAAOeXwiE8peJsswPcOGc5s8LttMyoqIAAu0GAALrbUlIIccHqQNOXy0aBA', {
     caption: `Я рисую картиночки разноцветными дугами. 
 
 Inspired by openprocessing.org/sketch/624879
