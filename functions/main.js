@@ -36,6 +36,7 @@ const processImage = async (url, chatId) => {
     imageWidth = Math.round(img.width / img.height * maxDimension)
   }
   imageHeight -= imageHeight % 2
+  imageWidth -= imageWidth % 2
 
   const sourceCanvas = createCanvas(imageWidth, imageHeight)
   const sourceCtx = sourceCanvas.getContext('2d')
