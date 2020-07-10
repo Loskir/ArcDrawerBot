@@ -9,7 +9,7 @@ const {promisify} = require('util')
 
 const writeFileAsync = promisify(fs.writeFile)
 
-const {randint, pad} = require('../core/utils')
+const {randint, pad, wait} = require('../core/utils')
 const {hrt, fmtMs, fmtPrc} = require('../functions/timings')
 
 const bot = new Telegram(process.env.BOT_TOKEN)
@@ -184,6 +184,8 @@ const processImage = async (url, chatId) => {
   return new Promise((resolve) => {
     ls.on('close', async (code) => {
       console.log(`ffmpeg done with code ${code} in ${fmtPrc(hrt(ffmpegStart), 0)}ms`)
+
+      await wait(1000)
 
       await bot.sendAnimation(chatId, {source: fs.createReadStream(`${reqId}.mp4`)})
       await new Promise((resolve) => rimraf(`frames/${reqId}`, resolve))
