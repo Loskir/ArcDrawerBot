@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const fs = require('fs')
 require('dotenv').config()
 
 const Results = require('./models/results')
@@ -17,6 +18,11 @@ void (async () => {
   console.log('connected')
 
   while (true) {
+    if (fs.existsSync('stop.txt')) {
+      console.log('exiting')
+      process.exit(0)
+      break
+    }
     const result = await Results.findOneAndUpdate({status: 0}, {$inc: {status: 1}})
 
     if (!result) {
