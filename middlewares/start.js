@@ -47,7 +47,7 @@ composer.on('photo', async (ctx) => {
 
   const word = ['картинка', 'картинки', 'картинок'][pluralizeIndex(queue)]
 
-  return ctx.reply(`Отлично, я положил твою картинку в очередь. Перед тобой ${queue} ${word}, подожди немного.`)
+  return ctx.reply(`Отлично, я положил твою картинку в очередь. Перед тобой ${queue} ${word}, подожди немного. Используй команду /queue, чтобы следить за длиной очереди`)
 
   // return processImage(url, ctx.chat.id)
 })
