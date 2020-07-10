@@ -5,7 +5,10 @@ const results = new mongoose.Schema({
 
   url: String,
 
-  status: Number,
+  status: {
+    type: Number,
+    default: 0,
+  },
   // 0 - не готов
   // 1 - готовится
   // 2 - готов
