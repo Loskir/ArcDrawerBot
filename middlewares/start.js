@@ -36,7 +36,16 @@ composer.on('photo', async (ctx) => {
     return ctx.reply(`Отлично, я начал рисовать твою картинку, подожди минутку`)
   }
 
-  return ctx.reply(`Отлично, я положил твою картинку в очередь. Перед тобой ${queue} картинок, подожди немного.`)
+  const pluralizeIndex = (n) => {
+    if (n % 10 === 1 && n % 100 !== 11) {
+      return 0
+    }
+    return n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2
+  }
+
+  const word = ['картинка', 'картинки', 'картинок'][pluralizeIndex(queue)]
+
+  return ctx.reply(`Отлично, я положил твою картинку в очередь. Перед тобой ${queue} ${word}, подожди немного.`)
 
   // return processImage(url, ctx.chat.id)
 })
