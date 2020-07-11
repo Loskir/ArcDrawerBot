@@ -25,7 +25,7 @@ const processImage = async (url, chatId) => {
   try {
     img = await loadImage(url)
   } catch (e) {
-    console.log(`Failed to get image for ${id}`)
+    console.log(`Failed to get image for ${reqId}`)
     return bot.sendMessage(chatId, `Я не смог получить изображение по ссылке :(. Пожалуйста, попробуй ещё раз.`)
   }
 
