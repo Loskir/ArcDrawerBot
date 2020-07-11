@@ -33,6 +33,12 @@ composer.on('photo', async (ctx) => {
     // Results.countDocuments({status: 1}),
   ])).reduce((a, v) => a+v, 0)
 
+  const pendingByThisUser = await Results.countDocuments({user_id: ctx.from.id, status: 0})
+
+  if (pendingByThisUser >= 10) {
+    return ctx.reply('Подожди немного, в очереди слишком много твоих заявок')
+  }
+
   await Results.create({
     user_id: ctx.from.id,
     url,
