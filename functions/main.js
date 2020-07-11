@@ -21,7 +21,13 @@ const processImage = async (url, chatId) => {
 
   console.log(`starting for ${chatId}, id: ${reqId}`)
 
-  const img = await loadImage(url)
+  let img
+  try {
+    img = await loadImage(url)
+  } catch (e) {
+    console.log(`Failed to get image for ${id}`)
+    return bot.sendMessage(chatId, `Я не смог получить изображение по ссылке :(. Пожалуйста, попробуй ещё раз.`)
+  }
 
   const maxDimension = 1000
 
