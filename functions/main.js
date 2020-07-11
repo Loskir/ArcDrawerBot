@@ -176,7 +176,7 @@ const processImage = async (url, chatId) => {
 
   const ffmpegStart = hrt()
 
-  const ls = exec(`ffmpeg -y -framerate 60 -i frames/${reqId}/%05d.jpg -c:v libx264 -pix_fmt yuv420p ${reqId}.mp4`)
+  const ls = exec(`ffmpeg -y -framerate 60 -i frames/${reqId}/%05d.jpg -c:v libx264 -pix_fmt yuv420p -preset veryslow ${reqId}.mp4`)
 
   // ls.stderr.on('data', (data) => {
   //   console.error(`stderr: ${data}`)
