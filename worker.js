@@ -30,8 +30,9 @@ void (async () => {
     }
 
     await processImage(result.url, result.user_id)
+      .then(() => Results.updateOne({_id: result._id}, {$set: {status: 2}}))
+      .catch((error) => Results.updateOne({_id: result._id}, {$set: {status: 3, error}}))
 
-    await Results.updateOne({_id: result._id}, {$set: {status: 2}})
   }
 })()
 
