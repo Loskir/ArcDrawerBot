@@ -4,6 +4,14 @@ const results = new mongoose.Schema({
   user_id: Number,
 
   url: String,
+  as_avatar: {
+    type: Boolean,
+    default: false
+  },
+  background_color: {
+    type: Number,
+    default: 'white',
+  },
 
   status: {
     type: Number,
@@ -12,6 +20,8 @@ const results = new mongoose.Schema({
   // 0 - не готов
   // 1 - готовится
   // 2 - готов
+  // 3 - ошибка
+  error: String,
 
   created_at: Date,
   updated_at: Date,
