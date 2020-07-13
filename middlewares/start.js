@@ -28,10 +28,7 @@ const pluralizeIndex = (n) => {
 composer.on('photo', async (ctx) => {
   const url = await ctx.telegram.getFileLink(ctx.message.photo[ctx.message.photo.length - 1].file_id)
 
-  const queue = (await Promise.all([
-    Results.countDocuments({status: 0}),
-    // Results.countDocuments({status: 1}),
-  ])).reduce((a, v) => a+v, 0)
+  const queueLength = await Results.countDocuments({status: 0})
 
   const pendingByThisUser = await Results.countDocuments({user_id: ctx.from.id, status: 0})
 
@@ -47,13 +44,13 @@ composer.on('photo', async (ctx) => {
 
   console.log(`new result from ${ctx.from.id}`)
 
-  if (queue === 0) {
+  if (queueLength === 0) {
     return ctx.reply(`Отлично, я начал рисовать твою картинку, подожди минутку`)
   }
 
-  const word = ['картинка', 'картинки', 'картинок'][pluralizeIndex(queue)]
+  const word = ['картинка', 'картинки', 'картинок'][pluralizeIndex(queueLength)]
 
-  return ctx.reply(`Отлично, я положил твою картинку в очередь. Перед тобой ${queue} ${word}, подожди немного. Используй команду /queue, чтобы следить за длиной очереди`)
+  return ctx.reply(`Отлично, я положил твою картинку в очередь. Перед тобой ${queueLength} ${word}, подожди немного. Используй команду /queue, чтобы следить за длиной очереди`)
 
   // return processImage(url, ctx.chat.id)
 })
