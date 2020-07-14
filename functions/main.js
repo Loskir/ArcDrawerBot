@@ -108,7 +108,7 @@ const processImage = async (url, chatId, asAvatar = false, bgColor = 'white') =>
 
   writes.push(writeFileAsync(`frames/${reqId}/${pad(0, 5)}.jpg`, resultCanvas.toBuffer('image/jpeg')))
 
-  for (let i = 0; i < fps * length; ++i) {
+  for (let i = 0; i < fps * length - 1; ++i) { // один кадр — пустой экран
     const iterStart = hrt()
     for (let j = 0; j < total; j++) {
       for (let k = 0; k < ticksPerFrame; ++k) {
