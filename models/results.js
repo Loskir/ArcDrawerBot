@@ -6,10 +6,10 @@ const results = new mongoose.Schema({
   url: String,
   as_avatar: {
     type: Boolean,
-    default: false
+    default: false,
   },
   background_color: {
-    type: Number,
+    type: String,
     default: 'white',
   },
 

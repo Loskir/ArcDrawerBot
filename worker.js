@@ -29,9 +29,12 @@ void (async () => {
       continue
     }
 
-    await processImage(result.url, result.user_id)
+    await processImage(result.url, result.user_id, result.as_avatar, result.background_color)
       .then(() => Results.updateOne({_id: result._id}, {$set: {status: 2}}))
-      .catch((error) => Results.updateOne({_id: result._id}, {$set: {status: 3, error}}))
+      .catch((error) => {
+        console.error(error)
+        return Results.updateOne({_id: result._id}, {$set: {status: 3, error}})
+      })
 
   }
 })()

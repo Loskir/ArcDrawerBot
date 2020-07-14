@@ -14,7 +14,7 @@ const {hrt, fmtMs, fmtPrc} = require('../functions/timings')
 
 const bot = new Telegram(process.env.BOT_TOKEN)
 
-const processImage = async (url, chatId) => {
+const processImage = async (url, chatId, asAvatar = false, bgColor = 'white') => {
   const start = hrt()
 
   const reqId = nanoid('abcdefbhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 20)
@@ -30,25 +30,38 @@ const processImage = async (url, chatId) => {
     throw new Error('FAILED_GET_IMAGE')
   }
 
-  const maxDimension = 1000
-
   let imageWidth = img.width
   let imageHeight = img.height
 
-  if (img.width > img.height) {
-    imageWidth = maxDimension
-    imageHeight = Math.round(img.height / img.width * maxDimension)
+  if (asAvatar) {
+    const dimension = 800
+    imageWidth = dimension
+    imageHeight = dimension
   } else {
-    imageHeight = maxDimension
-    imageWidth = Math.round(img.width / img.height * maxDimension)
+    const maxDimension = 1000
+
+    if (img.width > img.height) {
+      imageWidth = maxDimension
+      imageHeight = Math.round(img.height / img.width * maxDimension)
+    } else {
+      imageHeight = maxDimension
+      imageWidth = Math.round(img.width / img.height * maxDimension)
+    }
+    imageHeight -= imageHeight % 2
+    imageWidth -= imageWidth % 2
   }
-  imageHeight -= imageHeight % 2
-  imageWidth -= imageWidth % 2
 
   const sourceCanvas = createCanvas(imageWidth, imageHeight)
   const sourceCtx = sourceCanvas.getContext('2d')
 
-  sourceCtx.drawImage(img, 0, 0, imageWidth, imageHeight)
+  if (asAvatar) {
+    const sourceDimension = Math.min(img.width, img.height)
+    const offsetLeft = (img.width - sourceDimension) / 2
+    const offsetTop = (img.height - sourceDimension) / 2
+    sourceCtx.drawImage(img, offsetLeft, offsetTop, sourceDimension, sourceDimension, 0, 0, imageWidth, imageHeight)
+  } else {
+    sourceCtx.drawImage(img, 0, 0, imageWidth, imageHeight)
+  }
 
   const imgd = sourceCtx.getImageData(0, 0, imageWidth, imageHeight)
   const pix = imgd.data
@@ -56,7 +69,7 @@ const processImage = async (url, chatId) => {
   const resultCanvas = createCanvas(imageWidth, imageHeight)
   const resultCtx = resultCanvas.getContext('2d')
 
-  resultCtx.fillStyle = 'white'
+  resultCtx.fillStyle = bgColor
   resultCtx.fillRect(0, 0, imageWidth, imageHeight)
 
   const total = 100
@@ -75,9 +88,9 @@ const processImage = async (url, chatId) => {
   }
 
   const fps = 60
-  const length = 20
+  const length = asAvatar ? 10 :20
 
-  const ticksPerFrame = 5
+  const ticksPerFrame = asAvatar ? 10 : 5
 
   const getPixel = (x, y) => {
     const baseIndex = (y * imageWidth + x) * 4
@@ -183,7 +196,7 @@ const processImage = async (url, chatId) => {
 
   const ffmpegStart = hrt()
 
-  const ls = exec(`ffmpeg -y -framerate 60 -i frames/${reqId}/%05d.jpg -c:v libx264 -pix_fmt yuv420p -preset veryslow ${reqId}.mp4`)
+  const ls = exec(`ffmpeg -y -framerate 60 -i frames/${reqId}/%05d.jpg${asAvatar ? ' -b:v 1638K' : ''} -c:v libx264 -pix_fmt yuv420p -preset veryslow ${reqId}.mp4`)
 
   // ls.stderr.on('data', (data) => {
   //   console.error(`stderr: ${data}`)

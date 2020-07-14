@@ -2,8 +2,13 @@ const {Composer, Extra} = require('telegraf')
 
 const Results = require('../models/results')
 
+const {
+  pluralizeIndex,
+} = require('../core/utils')
+
 const composer = new Composer()
 composer.start((ctx) => {
+  ctx.scene.leave()
   return ctx.telegram.sendAnimation(ctx.from.id, 'CgACAgIAAxkDAAOeXwiE8peJsswPcOGc5s8LttMyoqIAAu0GAALrbUlIIccHqQNOXy0aBA', {
     caption: `Я рисую картиночки разноцветными дугами. 
 
@@ -12,47 +17,13 @@ Inspired by openprocessing.org/sketch/624879
 <a href="https://github.com/Loskir/ArcDrawerBot">Исходный код бота</a>
 Подписывайся на мой канал: @Loskirs
 
-Чтобы начать, отправь мне картинку (картинкой, не файлом)`,
+Чтобы начать, отправь мне картинку (картинкой, не файлом)
+
+Чтобы настроить параметры обработки, зайди в /custom
+Например, там можно сделать себе новую <a href="https://t.me/betainfo/195">видеоаватарку</a> 😏`,
     parse_mode: 'HTML',
     disable_web_page_preview: true,
   })
-})
-
-const pluralizeIndex = (n) => {
-  if (n % 10 === 1 && n % 100 !== 11) {
-    return 0
-  }
-  return n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2
-}
-
-composer.on('photo', async (ctx) => {
-  const url = await ctx.telegram.getFileLink(ctx.message.photo[ctx.message.photo.length - 1].file_id)
-
-  const queueLength = await Results.countDocuments({status: 0})
-
-  const pendingByThisUser = await Results.countDocuments({user_id: ctx.from.id, status: 0})
-
-  if (pendingByThisUser >= 10) {
-    return ctx.reply('Подожди немного, в очереди слишком много твоих заявок')
-  }
-
-  await Results.create({
-    user_id: ctx.from.id,
-    url,
-    status: 0,
-  })
-
-  console.log(`new result from ${ctx.from.id}`)
-
-  if (queueLength === 0) {
-    return ctx.reply(`Отлично, я начал рисовать твою картинку, подожди минутку`)
-  }
-
-  const word = ['картинка', 'картинки', 'картинок'][pluralizeIndex(queueLength)]
-
-  return ctx.reply(`Отлично, я положил твою картинку в очередь. Перед тобой ${queueLength} ${word}, подожди немного. Используй команду /queue, чтобы следить за длиной очереди`)
-
-  // return processImage(url, ctx.chat.id)
 })
 
 composer.command('queue', async (ctx) => {
@@ -75,5 +46,7 @@ composer.command('queue', async (ctx) => {
     Extra.HTML()
   )
 })
+
+composer.command('custom', (ctx) => ctx.scene.enter('custom'))
 
 module.exports = composer
