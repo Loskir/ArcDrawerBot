@@ -210,7 +210,11 @@ const processImage = async (url, chatId, asAvatar = false, bgColor = 'white') =>
 
       await wait(1000)
 
-      await bot.sendAnimation(chatId, {source: fs.createReadStream(`${reqId}.mp4`)})
+      if (asAvatar) {
+        await bot.sendVideo(chatId, {source: fs.createReadStream(`${reqId}.mp4`)})
+      } else {
+        await bot.sendAnimation(chatId, {source: fs.createReadStream(`${reqId}.mp4`)})
+      }
       await promisify(fs.unlink)(`${reqId}.mp4`)
       resolve()
     })
