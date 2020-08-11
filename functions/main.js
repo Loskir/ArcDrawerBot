@@ -1,13 +1,10 @@
 const {createCanvas, loadImage} = require('canvas')
-const rimraf = require('rimraf')
 const nanoid = require('nanoid/generate')
-const {Composer, Telegram} = require('telegraf')
+const {Telegram} = require('telegraf')
 
-const {exec} = require('child_process')
+const {spawn} = require('child_process')
 const fs = require('fs')
 const {promisify} = require('util')
-
-const writeFileAsync = promisify(fs.writeFile)
 
 const {randint, pad, wait} = require('../core/utils')
 const {hrt, fmtMs, fmtPrc} = require('../functions/timings')
@@ -88,7 +85,7 @@ const processImage = async (url, chatId, asAvatar = false, bgColor = 'white') =>
   }
 
   const fps = 60
-  const length = asAvatar ? 10 :20
+  const length = asAvatar ? 10 : 20
 
   const ticksPerFrame = asAvatar ? 10 : 5
 
@@ -102,11 +99,25 @@ const processImage = async (url, chatId, asAvatar = false, bgColor = 'white') =>
     return {r, g, b}
   }
 
-  let writes = []
+  const ffmpegStart = hrt()
 
-  fs.mkdirSync(`frames/${reqId}`)
+  const ls = spawn('ffmpeg', [
+    '-y',
+    '-framerate', '60',
+    '-i', '-',
+    // '-i', `frames/${reqId}/%05d.jpg`,
+    ...asAvatar ? ['-b:v', '1638K'] : [],
+    '-s', `${imageWidth}x${imageHeight}`,
+    // '-loglevel', 'error',
+    // '-f', 'rawvideo',
+    '-vcodec', 'libx264',
+    '-c:v', 'libx264',
+    '-pix_fmt', 'yuv420p',
+    '-preset', 'veryslow',
+    `${reqId}.mp4`,
+  ])
 
-  writes.push(writeFileAsync(`frames/${reqId}/${pad(0, 5)}.jpg`, resultCanvas.toBuffer('image/jpeg')))
+  ls.stdin.write(resultCanvas.toBuffer('image/jpeg'))
 
   for (let i = 0; i < fps * length - 1; ++i) { // один кадр — пустой экран
     const iterStart = hrt()
@@ -178,12 +189,11 @@ const processImage = async (url, chatId, asAvatar = false, bgColor = 'white') =>
       }
     }
     // console.log(`iter ${i} done in ${1000/fmtMs(hrt(iterStart))} iter/sec`)
-    // console.log(resultCanvas.toBuffer())
     const resultBuffer = resultCanvas.toBuffer('image/jpeg')
-    writes.push(writeFileAsync(`frames/${reqId}/${pad(i + 1, 5)}.jpg`, resultBuffer))
+    ls.stdin.write(resultBuffer)
   }
 
-  await Promise.all(writes)
+  ls.stdin.end()
 
   const resultBuffer = resultCanvas.toBuffer()
 
@@ -194,14 +204,6 @@ const processImage = async (url, chatId, asAvatar = false, bgColor = 'white') =>
   await bot.sendPhoto(chatId, {source: resultBuffer})
   await bot.sendMessage(chatId, 'Вот что у меня получилось. А скоро будет готово видео')
 
-  const ffmpegStart = hrt()
-
-  const ls = exec(`ffmpeg -y -framerate 60 -i frames/${reqId}/%05d.jpg${asAvatar ? ' -b:v 1638K' : ''} -c:v libx264 -pix_fmt yuv420p -preset veryslow ${reqId}.mp4`)
-
-  // ls.stderr.on('data', (data) => {
-  //   console.error(`stderr: ${data}`)
-  // })
-
   return new Promise((resolve) => {
     ls.on('close', async (code) => {
       console.log(`ffmpeg done with code ${code} in ${fmtPrc(hrt(ffmpegStart), 0)}ms`)
@@ -209,12 +211,10 @@ const processImage = async (url, chatId, asAvatar = false, bgColor = 'white') =>
       await wait(1000)
 
       await bot.sendAnimation(chatId, {source: fs.createReadStream(`${reqId}.mp4`)})
-      await new Promise((resolve) => rimraf(`frames/${reqId}`, resolve))
       await promisify(fs.unlink)(`${reqId}.mp4`)
       resolve()
     })
   })
-
 }
 
 module.exports = {processImage}
