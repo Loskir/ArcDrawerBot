@@ -11,6 +11,15 @@ const {hrt, fmtMs, fmtPrc} = require('../functions/timings')
 
 const bot = new Telegram(process.env.BOT_TOKEN)
 
+const toBufferAsync = (canvas) => new Promise(((resolve, reject) => {
+  canvas.toBuffer((err, buf) => {
+    if (err) {
+      return reject(err)
+    }
+    return resolve(buf)
+  }, 'image/jpeg')
+}))
+
 const processImage = async (url, chatId, asAvatar = false, bgColor = 'white') => {
   const start = hrt()
 
@@ -85,7 +94,7 @@ const processImage = async (url, chatId, asAvatar = false, bgColor = 'white') =>
   }
 
   const fps = 60
-  const length = asAvatar ? 10 : 20
+  const length = asAvatar ? 9 : 20
 
   const ticksPerFrame = asAvatar ? 10 : 5
 
@@ -113,13 +122,20 @@ const processImage = async (url, chatId, asAvatar = false, bgColor = 'white') =>
     '-vcodec', 'libx264',
     '-c:v', 'libx264',
     '-pix_fmt', 'yuv420p',
-    '-preset', 'veryslow',
+    '-preset', asAvatar ? 'veryslow' : 'medium',
     `${reqId}.mp4`,
   ])
 
-  ls.stdin.write(resultCanvas.toBuffer('image/jpeg'))
+  ls.stdin.write(await toBufferAsync(resultCanvas))
 
-  for (let i = 0; i < fps * length - 1; ++i) { // один кадр — пустой экран
+  const avatarLastFrames = 1 // кадры в конце, когда показывается исходная картинка
+
+  let framesNum = fps * length - 1 // один кадр — пустой экран
+  if (asAvatar) {
+    framesNum -= avatarLastFrames
+  }
+
+  for (let i = 0; i < framesNum; ++i) {
     const iterStart = hrt()
     for (let j = 0; j < total; j++) {
       for (let k = 0; k < ticksPerFrame; ++k) {
@@ -189,36 +205,38 @@ const processImage = async (url, chatId, asAvatar = false, bgColor = 'white') =>
       }
     }
     // console.log(`iter ${i} done in ${1000/fmtMs(hrt(iterStart))} iter/sec`)
-    const resultBuffer = resultCanvas.toBuffer('image/jpeg')
-    ls.stdin.write(resultBuffer)
+    ls.stdin.write(await toBufferAsync(resultCanvas))
+  }
+
+  if (asAvatar) {
+    const sourceBuffer = await toBufferAsync(sourceCanvas)
+    for (let i = 0; i < avatarLastFrames; ++i) {
+      ls.stdin.write(sourceBuffer)
+    }
   }
 
   ls.stdin.end()
-
-  const resultBuffer = resultCanvas.toBuffer()
 
   const time = fmtMs(hrt(start))
 
   console.log(`done in ${time}ms (${time / (fps * length)} ms/iter)`)
 
-  await bot.sendPhoto(chatId, {source: resultBuffer})
-  await bot.sendMessage(chatId, 'Вот что у меня получилось. А скоро будет готово видео')
-
-  return new Promise((resolve) => {
-    ls.on('close', async (code) => {
-      console.log(`ffmpeg done with code ${code} in ${fmtPrc(hrt(ffmpegStart), 0)}ms`)
-
-      await wait(1000)
-
-      if (asAvatar) {
-        await bot.sendVideo(chatId, {source: fs.createReadStream(`${reqId}.mp4`)})
-      } else {
-        await bot.sendAnimation(chatId, {source: fs.createReadStream(`${reqId}.mp4`)})
-      }
-      await promisify(fs.unlink)(`${reqId}.mp4`)
-      resolve()
+  toBufferAsync(resultCanvas)
+    .then(async (resultBuffer) => {
+      await bot.sendPhoto(chatId, {source: resultBuffer})
+      await bot.sendMessage(chatId, 'Вот что у меня получилось. А скоро будет готово видео')
     })
-  })
+
+  const code = await new Promise((r) => ls.on('close', (code) => r(code)))
+
+  console.log(`ffmpeg done with code ${code} in ${fmtPrc(hrt(ffmpegStart), 0)}ms`)
+
+  if (asAvatar) {
+    await bot.sendVideo(chatId, {source: fs.createReadStream(`${reqId}.mp4`)})
+  } else {
+    await bot.sendAnimation(chatId, {source: fs.createReadStream(`${reqId}.mp4`)})
+  }
+  await promisify(fs.unlink)(`${reqId}.mp4`)
 }
 
 module.exports = {processImage}
