@@ -47,6 +47,4 @@ composer.command('queue', async (ctx) => {
   )
 })
 
-composer.command('custom', (ctx) => ctx.scene.enter('custom'))
-
 module.exports = composer

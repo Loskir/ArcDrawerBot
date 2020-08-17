@@ -14,13 +14,8 @@ bot.use(new MongooseSession())
 
 bot.use(require('./users'))
 
-const stage = new Stage([
-  require('./scenes/custom'),
-])
+bot.use(require('./middlewares/start'))
 
-stage.use(require('./middlewares/start'))
-
-bot.use(stage)
 bot.use(require('./middlewares/main'))
 
 void (async () => {

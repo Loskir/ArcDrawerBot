@@ -14,17 +14,6 @@ const checkPendingByThisUser = async (ctx, next) => {
   return next()
 }
 
-const getReplyTextByQueueLength = (queueLength) => {
-  if (queueLength === 0) {
-    return `Отлично, я начал рисовать твою картинку, подожди минутку`
-  }
-
-  const word = ['картинка', 'картинки', 'картинок'][pluralizeIndex(queueLength)]
-
-  return `Отлично, я положил твою картинку в очередь. Перед тобой ${queueLength} ${word}, подожди немного. Используй команду /queue, чтобы следить за длиной очереди`
-}
-
 module.exports = {
   checkPendingByThisUser,
-  getReplyTextByQueueLength,
 }
