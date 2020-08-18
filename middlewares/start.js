@@ -8,7 +8,6 @@ const {
 
 const composer = new Composer()
 composer.start((ctx) => {
-  ctx.scene.leave()
   return ctx.telegram.sendAnimation(ctx.from.id, 'CgACAgIAAxkDAAOeXwiE8peJsswPcOGc5s8LttMyoqIAAu0GAALrbUlIIccHqQNOXy0aBA', {
     caption: `Я рисую картиночки разноцветными дугами. 
 
