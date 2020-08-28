@@ -8,6 +8,7 @@ const {
 
 const {
   catchNotModified,
+  pluralizeIndex,
 } = require('../core/utils')
 
 const getMode = (options) => options.asAvatar ? 'На аватарку' : 'Обычный'
